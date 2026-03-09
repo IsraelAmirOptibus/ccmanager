@@ -48,6 +48,9 @@ const Session: React.FC<SessionProps> = ({
 			stdout.write('\x1b[?7h'); // Re-enable auto-wrap
 		};
 
+		// Enable modifyOtherKeys so Shift+Enter sends distinct sequence (CSI 27;2;13~)
+		stdout.write('\x1b[>4;2m');
+
 		// Set up raw input handling
 		const stdin = process.stdin;
 
@@ -80,8 +83,9 @@ const Session: React.FC<SessionProps> = ({
 				);
 			}
 
-			// Pass all other input directly to the PTY
-			session.process.write(data);
+			// Shift+Enter (CSI 27;2;13~) → newline for multiline input
+			const toWrite = data.replace(/\x1b\[27;2;13~/g, '\n');
+			session.process.write(toWrite);
 		};
 
 		stdin.on('data', handleStdinData);
