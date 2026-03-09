@@ -112,11 +112,21 @@ const Session: React.FC<SessionProps> = ({
 		// Listen for restore event first
 		sessionManager.on('sessionRestore', handleSessionRestore);
 
+		const stripKeyboardModeSequences = (input: string): string => {
+			// Strip terminal keyboard mode sequences emitted by the child process
+			// so they don't override our modifyOtherKeys setting (needed for Shift+Enter)
+			return input
+				.replace(/\x1B\[>4;?\d*m/g, '') // modifyOtherKeys set/reset
+				.replace(/\x1B\[>[0-9;]*u/g, '') // kitty keyboard protocol enables
+				.replace(/\x1B\[\?1004[hl]/g, '') // focus tracking
+				.replace(/\x1B\[\?2004[hl]/g, ''); // bracketed paste
+		};
+
 		// Listen for session data events
 		const handleSessionData = (activeSession: ISession, data: string) => {
 			// Only handle data for our session
 			if (activeSession.id === session.id && !isExitingRef.current) {
-				stdout.write(normalizeLineEndings(data));
+				stdout.write(normalizeLineEndings(stripKeyboardModeSequences(data)));
 			}
 		};
 
