@@ -1,24 +1,24 @@
 #!/usr/bin/env node
 
-import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { createRequire } from "node:module";
+import {execFileSync} from 'node:child_process';
+import {existsSync} from 'node:fs';
+import {dirname, join} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {createRequire} from 'node:module';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
-const PACKAGE_SCOPE = "@kodaikabasawa";
-const PACKAGE_NAME = "ccmanager";
-const BINARY_NAME = "ccmanager";
+const PACKAGE_SCOPE = '@kodaikabasawa';
+const PACKAGE_NAME = 'ccmanager';
+const BINARY_NAME = 'ccmanager';
 
 const PLATFORM_PACKAGES = {
-	"darwin-arm64": `${PACKAGE_SCOPE}/${PACKAGE_NAME}-darwin-arm64`,
-	"darwin-x64": `${PACKAGE_SCOPE}/${PACKAGE_NAME}-darwin-x64`,
-	"linux-arm64": `${PACKAGE_SCOPE}/${PACKAGE_NAME}-linux-arm64`,
-	"linux-x64": `${PACKAGE_SCOPE}/${PACKAGE_NAME}-linux-x64`,
-	"win32-x64": `${PACKAGE_SCOPE}/${PACKAGE_NAME}-win32-x64`,
+	'darwin-arm64': `${PACKAGE_SCOPE}/${PACKAGE_NAME}-darwin-arm64`,
+	'darwin-x64': `${PACKAGE_SCOPE}/${PACKAGE_NAME}-darwin-x64`,
+	'linux-arm64': `${PACKAGE_SCOPE}/${PACKAGE_NAME}-linux-arm64`,
+	'linux-x64': `${PACKAGE_SCOPE}/${PACKAGE_NAME}-linux-x64`,
+	'win32-x64': `${PACKAGE_SCOPE}/${PACKAGE_NAME}-win32-x64`,
 };
 
 function getPlatformKey() {
@@ -28,7 +28,7 @@ function getPlatformKey() {
 }
 
 function getBinaryName() {
-	return process.platform === "win32" ? `${BINARY_NAME}.exe` : BINARY_NAME;
+	return process.platform === 'win32' ? `${BINARY_NAME}.exe` : BINARY_NAME;
 }
 
 function getBinaryPath() {
@@ -39,7 +39,7 @@ function getBinaryPath() {
 	if (!platformPackage) {
 		console.error(`Unsupported platform: ${platformKey}`);
 		console.error(
-			`Supported platforms: ${Object.keys(PLATFORM_PACKAGES).join(", ")}`,
+			`Supported platforms: ${Object.keys(PLATFORM_PACKAGES).join(', ')}`,
 		);
 		process.exit(1);
 	}
@@ -49,7 +49,7 @@ function getBinaryPath() {
 		const packagePath = dirname(
 			require.resolve(`${platformPackage}/package.json`),
 		);
-		const binaryPath = join(packagePath, "bin", binaryName);
+		const binaryPath = join(packagePath, 'bin', binaryName);
 		if (existsSync(binaryPath)) {
 			return binaryPath;
 		}
@@ -64,7 +64,7 @@ function getBinaryPath() {
 	}
 
 	console.error(`Could not find ${BINARY_NAME} binary for ${platformKey}`);
-	console.error("Please try reinstalling the package:");
+	console.error('Please try reinstalling the package:');
 	console.error(`  npm install -g ${PACKAGE_NAME}`);
 	process.exit(1);
 }
@@ -74,13 +74,13 @@ try {
 	const args = process.argv.slice(2);
 
 	execFileSync(binaryPath, args, {
-		stdio: "inherit",
+		stdio: 'inherit',
 		env: process.env,
 	});
 } catch (error) {
 	if (error.status !== undefined) {
 		process.exit(error.status);
 	}
-	console.error("Failed to execute ccmanager:", error.message);
+	console.error('Failed to execute ccmanager:', error.message);
 	process.exit(1);
 }

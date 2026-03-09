@@ -9,6 +9,20 @@ import prettierConfig from 'eslint-config-prettier';
 export default [
   js.configs.recommended,
   {
+    files: ['bin/**/*.js'],
+    languageOptions: {
+      globals: {
+        process: true,
+        console: true,
+        Buffer: true,
+        __dirname: true,
+        __filename: true,
+        module: true,
+        require: true
+      }
+    }
+  },
+  {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parser: typescriptParser,
