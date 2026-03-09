@@ -66,6 +66,8 @@ const Session: React.FC<SessionProps> = ({
 
 		// Reset modes immediately on entry in case a previous session left them on
 		resetTerminalInputModes();
+		// Enable modifyOtherKeys so Shift+Enter sends distinct sequence (CSI 27;2;13~)
+		stdout.write('\x1b[>4;2m');
 		// Prevent line wrapping from drifting redraws in TUIs that rely on cursor-up clears.
 		stdout.write('\x1b[?7l');
 
@@ -183,8 +185,9 @@ const Session: React.FC<SessionProps> = ({
 				);
 			}
 
-			// Pass all other input directly to the PTY
-			session.process.write(data);
+			// Shift+Enter (CSI 27;2;13~) → newline for multiline input
+			const toWrite = data.replace(/\x1b\[27;2;13~/g, '\n');
+			session.process.write(toWrite);
 		};
 
 		stdin.on('data', handleStdinData);
