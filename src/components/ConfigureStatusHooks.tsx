@@ -9,7 +9,44 @@ interface ConfigureStatusHooksProps {
 	onComplete: () => void;
 }
 
-type View = 'menu' | 'edit';
+type View = 'menu' | 'presets' | 'edit';
+
+interface NotificationPreset {
+	label: string;
+	value: string;
+	command: string;
+}
+
+const NOTIFICATION_PRESETS: NotificationPreset[] = [
+	{
+		label: 'macOS Notification',
+		value: 'macos',
+		command:
+			'osascript -e "display notification \\"$CCMANAGER_NEW_STATE\\" with title \\"CCManager\\" sound name \\"Ping\\""',
+	},
+	{
+		label: 'macOS Notification (with branch)',
+		value: 'macos-branch',
+		command:
+			'osascript -e "display notification \\"$CCMANAGER_WORKTREE_BRANCH is now $CCMANAGER_NEW_STATE\\" with title \\"CCManager\\" sound name \\"Ping\\""',
+	},
+	{
+		label: 'macOS Say (text-to-speech)',
+		value: 'macos-say',
+		command: 'say "Session is now $CCMANAGER_NEW_STATE"',
+	},
+	{
+		label: 'Linux Notification (notify-send)',
+		value: 'linux',
+		command:
+			'notify-send "CCManager" "$CCMANAGER_WORKTREE_BRANCH is now $CCMANAGER_NEW_STATE"',
+	},
+	{
+		label: 'Terminal Bell',
+		value: 'bell',
+		command: "printf '\\a'",
+	},
+];
 
 interface MenuItem {
 	label: string;
@@ -46,6 +83,8 @@ const ConfigureStatusHooks: React.FC<ConfigureStatusHooksProps> = ({
 	useInput((input, key) => {
 		if (key.escape) {
 			if (view === 'edit') {
+				setView('presets');
+			} else if (view === 'presets') {
 				setView('menu');
 			} else {
 				onComplete();
@@ -112,7 +151,27 @@ const ConfigureStatusHooks: React.FC<ConfigureStatusHooksProps> = ({
 			const hook = statusHooks[status];
 			setCurrentCommand(hook?.command || '');
 			setCurrentEnabled(hook?.enabled ?? true);
+			setView('presets');
+		}
+	};
+
+	const handlePresetSelect = (item: MenuItem) => {
+		if (item.value === 'custom') {
 			setView('edit');
+		} else {
+			const preset = NOTIFICATION_PRESETS.find(p => p.value === item.value);
+			if (preset) {
+				setCurrentCommand(preset.command);
+				setCurrentEnabled(true);
+				setStatusHooks(prev => ({
+					...prev,
+					[selectedStatus]: {
+						command: preset.command,
+						enabled: true,
+					},
+				}));
+				setView('menu');
+			}
 		}
 	};
 
@@ -135,6 +194,44 @@ const ConfigureStatusHooks: React.FC<ConfigureStatusHooksProps> = ({
 		return (
 			<Box flexDirection="column">
 				<Text color="green">✓ Configuration saved successfully!</Text>
+			</Box>
+		);
+	}
+
+	if (view === 'presets') {
+		const presetItems: MenuItem[] = [
+			...NOTIFICATION_PRESETS.map(p => ({
+				label: `${p.label}: ${p.command}`,
+				value: p.value,
+			})),
+			{label: '', value: 'separator'},
+			{label: '✏️  Custom command...', value: 'custom'},
+		];
+
+		return (
+			<Box flexDirection="column">
+				<Box marginBottom={1}>
+					<Text bold color="green">
+						{STATUS_LABELS[selectedStatus]} Hook — Choose Notification
+					</Text>
+				</Box>
+
+				<Box marginBottom={1}>
+					<Text dimColor>
+						Select a preset notification or write a custom command:
+					</Text>
+				</Box>
+
+				<SelectInput
+					items={presetItems}
+					onSelect={handlePresetSelect}
+					isFocused={true}
+					limit={10}
+				/>
+
+				<Box marginTop={1}>
+					<Text dimColor>Press Esc to go back</Text>
+				</Box>
 			</Box>
 		);
 	}
