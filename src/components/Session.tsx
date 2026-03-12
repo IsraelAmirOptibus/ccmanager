@@ -59,15 +59,17 @@ const Session: React.FC<SessionProps> = ({
 			// on our own TTY when restoring the session view.
 			return stripOscColorSequences(input)
 				.replace(/\x1B\[>4;?\d*m/g, '') // modifyOtherKeys set/reset
-				.replace(/\x1B\[>[0-9;]*u/g, '') // kitty keyboard protocol enables
+				.replace(/\x1B\[>[0-9;]*u/g, '') // kitty keyboard protocol push
+				.replace(/\x1B\[<\d*u/g, '') // kitty keyboard protocol pop
+				.replace(/\x1B\[=[0-9;]*u/g, '') // kitty keyboard protocol set
 				.replace(/\x1B\[\?1004[hl]/g, '') // focus tracking
-				.replace(/\x1B\[\?2004[hl]/g, ''); // bracketed paste
+				.replace(/\x1B\[\?2004[hl]/g, '') // bracketed paste
+				.replace(/\x1Bc/g, '') // RIS (full terminal reset)
+				.replace(/\x1B\[!p/g, ''); // DECSTR (soft terminal reset)
 		};
 
 		// Reset modes immediately on entry in case a previous session left them on
 		resetTerminalInputModes();
-		// Enable modifyOtherKeys so Shift+Enter sends distinct sequence (CSI 27;2;13~)
-		stdout.write('\x1b[>4;2m');
 		// Prevent line wrapping from drifting redraws in TUIs that rely on cursor-up clears.
 		stdout.write('\x1b[?7l');
 
@@ -105,6 +107,16 @@ const Session: React.FC<SessionProps> = ({
 		// Mark session as active (this will trigger the restore event)
 		sessionManager.setSessionActive(session.worktreePath, true);
 
+		// Enable modifyOtherKeys AFTER replay so that terminal reset sequences
+		// (DECSTR, RIS, alt screen switches, kitty keyboard pops) in the replay
+		// buffer cannot disable it. The replay may contain sequences our sanitizer
+		// doesn't catch that implicitly reset keyboard modes.
+		// Defer to next tick so the terminal finishes processing the replay first;
+		// otherwise the enable can be overwritten when returning to a session.
+		process.nextTick(() => {
+			stdout.write('\x1b[>4;2m');
+		});
+
 		// Immediately resize the PTY and terminal to current dimensions
 		// This fixes rendering issues when terminal width changed while in menu
 		// https://github.com/kbwo/ccmanager/issues/2
@@ -128,15 +140,25 @@ const Session: React.FC<SessionProps> = ({
 			// so they don't override our modifyOtherKeys setting (needed for Shift+Enter)
 			return input
 				.replace(/\x1B\[>4;?\d*m/g, '') // modifyOtherKeys set/reset
-				.replace(/\x1B\[>[0-9;]*u/g, '') // kitty keyboard protocol enables
+				.replace(/\x1B\[>[0-9;]*u/g, '') // kitty keyboard protocol push
+				.replace(/\x1B\[<\d*u/g, '') // kitty keyboard protocol pop
+				.replace(/\x1B\[=[0-9;]*u/g, '') // kitty keyboard protocol set
 				.replace(/\x1B\[\?1004[hl]/g, '') // focus tracking
-				.replace(/\x1B\[\?2004[hl]/g, ''); // bracketed paste
+				.replace(/\x1B\[\?2004[hl]/g, '') // bracketed paste
+				.replace(/\x1Bc/g, '') // RIS (full terminal reset)
+				.replace(/\x1B\[!p/g, ''); // DECSTR (soft terminal reset)
 		};
+
+		const enableModifyOtherKeys = '\x1b[>4;2m';
 
 		const handleSessionData = (activeSession: ISession, data: string) => {
 			// Only handle data for our session
 			if (activeSession.id === session.id && !isExitingRef.current) {
 				stdout.write(normalizeLineEndings(stripKeyboardModeSequences(data)));
+				// Re-enable modifyOtherKeys after every child write. The child's
+				// output may contain sequences (alt screen switches, terminal resets,
+				// etc.) that implicitly disable modifyOtherKeys despite our sanitizer.
+				stdout.write(enableModifyOtherKeys);
 			}
 		};
 
