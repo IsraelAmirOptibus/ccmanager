@@ -1,6 +1,7 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
 import {existsSync, readFileSync, writeFileSync} from 'fs';
 import {execSync} from 'child_process';
+import {ENV_VARS} from '../../constants/env.js';
 import type {ProjectConfigurationData} from '../../types/index.js';
 
 // Mock fs module
@@ -21,6 +22,8 @@ describe('ProjectConfigManager - git repository root', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.resetModules();
+		// Ensure project config loads (skip when CCMANAGER_MULTI_PROJECT_ROOT is set)
+		delete process.env[ENV_VARS.MULTI_PROJECT_ROOT];
 	});
 
 	afterEach(() => {

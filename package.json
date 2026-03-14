@@ -1,5 +1,5 @@
 {
-	"name": "ccmanager",
+	"name": "@israel-amir/ccmanager",
 	"version": "3.11.2",
 	"description": "TUI application for managing multiple Claude Code sessions across Git worktrees",
 	"license": "MIT",
@@ -40,13 +40,6 @@
 		"dist",
 		"bin"
 	],
-	"optionalDependencies": {
-		"@kodaikabasawa/ccmanager-darwin-arm64": "3.11.2",
-		"@kodaikabasawa/ccmanager-darwin-x64": "3.11.2",
-		"@kodaikabasawa/ccmanager-linux-arm64": "3.11.2",
-		"@kodaikabasawa/ccmanager-linux-x64": "3.11.2",
-		"@kodaikabasawa/ccmanager-win32-x64": "3.11.2"
-	},
 	"devDependencies": {
 		"@eslint/js": "^9.28.0",
 		"@sindresorhus/tsconfig": "^8.1.0",

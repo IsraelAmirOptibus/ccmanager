@@ -80,13 +80,17 @@ describe('terminalCapabilities', () => {
 			expect(supportsUnicode()).toBe(false);
 		});
 
-		it('should return true on Windows when WT_SESSION is set (Windows Terminal)', () => {
+		it('should return true on Windows when WT_SESSION is set (Windows Terminal)', async () => {
+			vi.resetModules();
 			Object.defineProperty(process, 'platform', {
 				value: 'win32',
 				writable: true,
 			});
 			process.env['WT_SESSION'] = 'some-session-id';
-			expect(supportsUnicode()).toBe(true);
+			delete process.env['TERM'];
+			const {supportsUnicode: supportsUnicodeFresh} =
+				await import('./terminalCapabilities.js');
+			expect(supportsUnicodeFresh()).toBe(true);
 		});
 
 		it('should return false on Windows without Windows Terminal markers', () => {
@@ -99,10 +103,14 @@ describe('terminalCapabilities', () => {
 			expect(supportsUnicode()).toBe(false);
 		});
 
-		it('should return true when CI environment variable is set and LANG is UTF-8', () => {
+		it('should return true when CI environment variable is set and LANG is UTF-8', async () => {
+			vi.resetModules();
+			delete process.env['TERM'];
 			process.env['CI'] = 'true';
 			process.env['LANG'] = 'en_US.UTF-8';
-			expect(supportsUnicode()).toBe(true);
+			const {supportsUnicode: supportsUnicodeFresh} =
+				await import('./terminalCapabilities.js');
+			expect(supportsUnicodeFresh()).toBe(true);
 		});
 
 		it('should return false when TERM_PROGRAM is Apple_Terminal on older macOS', () => {

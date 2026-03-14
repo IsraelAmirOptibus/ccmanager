@@ -2,6 +2,11 @@ import {describe, it, expect, vi, afterEach} from 'vitest';
 import React from 'react';
 import {render} from 'ink-testing-library';
 import LoadingSpinner from './LoadingSpinner.js';
+import {supportsUnicode} from '../utils/terminalCapabilities.js';
+
+vi.mock('../utils/terminalCapabilities.js', () => ({
+	supportsUnicode: vi.fn(() => true),
+}));
 
 describe('LoadingSpinner', () => {
 	// Store original environment variables for restoration
@@ -168,6 +173,8 @@ describe('LoadingSpinner', () => {
 		});
 
 		it('should automatically fallback to ASCII when terminal does not support Unicode', () => {
+			// Override mock: this test expects ASCII fallback
+			vi.mocked(supportsUnicode).mockReturnValueOnce(false);
 			// Set up environment without Unicode support
 			process.env['TERM'] = 'dumb';
 			delete process.env['LANG'];
@@ -211,6 +218,8 @@ describe('LoadingSpinner', () => {
 		});
 
 		it('should fallback to ASCII on Windows without Windows Terminal', () => {
+			// Override mock: this test expects ASCII fallback
+			vi.mocked(supportsUnicode).mockReturnValueOnce(false);
 			// Mock Windows platform without Windows Terminal
 			Object.defineProperty(process, 'platform', {
 				value: 'win32',
