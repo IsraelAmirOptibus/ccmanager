@@ -42,7 +42,7 @@
 	],
 	"optionalDependencies": {
 		"@kodaikabasawa/ccmanager-darwin-arm64": "3.11.2",
-		"@kodaikabasawa/ccmanager-darwin-x64": "3.11.2",
+		"@kodaikabasawa/ccmanager-darwin-x64": "4.0.3",
 		"@kodaikabasawa/ccmanager-linux-arm64": "3.11.2",
 		"@kodaikabasawa/ccmanager-linux-x64": "3.11.2",
 		"@kodaikabasawa/ccmanager-win32-x64": "3.11.2"
