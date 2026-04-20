@@ -1,62 +1,45 @@
-# CCManager - AI Code Agent Session Manager
+# CCManager
 
-[![Mentioned in Awesome Gemini CLI](https://awesome.re/mentioned-badge.svg)](https://github.com/Piebald-AI/awesome-gemini-cli)
+A terminal UI for running and switching between multiple AI coding-agent sessions (Claude Code, Gemini CLI, Codex, Cursor Agent, Copilot CLI, Cline, OpenCode, Kimi) — one session per Git worktree, all visible in a single menu with live status indicators.
 
-CCManager is a CLI application for managing multiple AI coding assistant sessions (Claude Code, Gemini CLI, Codex CLI, Cursor Agent, Copilot CLI, Cline CLI, OpenCode, Kimi CLI) across Git worktrees and projects.
+## What it does
 
-https://github.com/user-attachments/assets/15914a88-e288-4ac9-94d5-8127f2e19dbf
+- **Parallel sessions across worktrees.** Each worktree gets its own agent session running in the background; switch between them from a menu without losing state.
+- **Live status.** The menu shows whether each session is **busy**, **waiting for input**, or **idle**, so you know where to look.
+- **Worktree management.** Create, merge, and delete Git worktrees from inside the TUI.
+- **Multi-project mode.** Point it at a directory and it discovers every Git repo underneath, so you can jump between projects as well as worktrees.
+- **Status-change hooks.** Run a shell command whenever a session's state changes (for notifications, logging, automation).
+- **Command presets.** Configure which agent and arguments to launch, with automatic fallbacks.
+- **Devcontainer integration.** Run the agent inside a container while CCManager stays on the host.
+- **Auto-approval (experimental).** Optionally let CCManager auto-confirm safe Claude Code prompts.
+- **Session restoration.** Returning to a session replays the terminal state, so your scrollback is intact.
 
-## Features
+## Additions in this build
 
-- Run multiple AI assistant sessions in parallel across different Git worktrees
-- **Multi-project support**: Manage multiple git repositories from a single interface
-- Support for multiple AI coding assistants (Claude Code, Gemini CLI, Codex CLI, Cursor Agent, Copilot CLI, Cline CLI, OpenCode, Kimi CLI)
-- Switch between sessions seamlessly
-- Visual status indicators for session states (busy, waiting, idle)
-- Create, merge, and delete worktrees from within the app
-- **Copy Claude Code session data** between worktrees to maintain conversation context
-- Configurable keyboard shortcuts
-- Command presets with automatic fallback support
-- Configurable state detection strategies for different CLI tools
-- Status change hooks for automation and notifications
-- Devcontainer integration
-- **Auto Approval (experimental)**: Automatically approve safe prompts using AI verification
+### Shift+Enter → newline
 
-## Why CCManager over Claude Squad?
+Inside an active session, **Shift+Enter** inserts a literal newline instead of submitting. Useful for writing multi-line prompts to Claude / Codex / etc. It works even after the child agent redraws its UI or you jump between worktrees, because CCManager re-asserts the terminal's `modifyOtherKeys` mode and strips conflicting escape sequences from the child's output.
 
-Both tools solve the same problem - managing multiple Claude Code sessions - but take different approaches.
+### Notification hook presets
 
-**If you love tmux-based workflows, stick with Claude Squad!** It's a great tool that leverages tmux's power for session management.
+Under **Global Configuration → Configure Status Hooks**, each status (busy / waiting / idle) now offers one-click presets instead of only a custom command field:
 
-CCManager is for developers who want:
+- macOS notification
+- macOS notification including the worktree branch name
+- macOS `say` (text-to-speech)
+- Linux `notify-send`
+- Terminal bell
+- …or write your own
 
-### 🚀 No tmux dependency
-CCManager is completely self-contained. No need to install or configure tmux - it works out of the box. Perfect if you don't use tmux or want to keep your tmux setup separate from Claude Code management.
-
-### 👁️ Real-time session monitoring
-CCManager shows the actual state of each Claude Code session directly in the menu:
-- **Waiting**: Claude is asking for user input
-- **Busy**: Claude is processing
-- **Idle**: Ready for new tasks
-
-Claude Squad doesn't show session states in its menu, making it hard to know which sessions need attention. While Claude Squad offers an AutoYes feature, this bypasses Claude Code's built-in security confirmations - not recommended for safe operation.
-
-### 🎯 Simple and intuitive interface
-Following Claude Code's philosophy, CCManager keeps things minimal and intuitive. The interface is so simple you'll understand it in seconds - no manual needed.
+Picking a preset fills in the shell command for you; you can still edit or replace it.
 
 ## Install
 
 ```bash
-npm install -g ccmanager
+npm install -g @israel-amir/ccmanager
 ```
 
-### Local Development
-
-```bash
-npm install
-npm run build
-npm start
-```
+Requires Node.js. No other setup needed — `dist/` is shipped prebuilt.
 
 ## Usage
 
@@ -64,306 +47,62 @@ npm start
 ccmanager
 ```
 
-Or run without installing:
+Or without installing:
 
 ```bash
-npx ccmanager
+npx @israel-amir/ccmanager
 ```
 
-## Keyboard Shortcuts
-
-### Default Shortcuts
-
-- **Ctrl+E**: Return to menu from active session
-- **Escape**: Cancel/Go back in dialogs
-
-### Customizing Shortcuts
-
-You can customize keyboard shortcuts in two ways:
-
-1. **Through the UI**: Select **Global Configuration** → **Configure Shortcuts** from the main menu
-2. **Configuration file**: Edit `~/.config/ccmanager/config.json` or `.ccmanager.json` for per-project settings (see [Per-Project Configuration](#per-project-configuration))
-
-Example configuration:
-```json
-// config.json (new format)
-{
-  "shortcuts": {
-    "returnToMenu": {
-      "ctrl": true,
-      "key": "r"
-    },
-    "cancel": {
-      "key": "escape"
-    }
-  }
-}
-```
-
-Note: Shortcuts from `shortcuts.json` will be automatically migrated to `config.json` on first use.
-
-### Restrictions
-
-- Shortcuts must use a modifier key (Ctrl) except for special keys like Escape
-- The following key combinations are reserved and cannot be used:
-  - Ctrl+C
-  - Ctrl+D
-  - Ctrl+[ (equivalent to Escape)
-
-## Per-Project Configuration
-
-CCManager supports per-project configuration by placing a `.ccmanager.json` file in your git repository root. Project settings are merged with the global config (`~/.config/ccmanager/config.json`), with project settings always taking priority.
-
-For detailed configuration options and examples, see [docs/project-config.md](docs/project-config.md).
-
-## Supported AI Assistants
-
-CCManager supports multiple AI coding assistants with tailored state detection for each:
-
-| Assistant | Command | Installation |
-|-----------|---------|--------------|
-| Claude Code (Default) | `claude` | [code.claude.com](https://code.claude.com/docs/en/setup) |
-| Gemini CLI | `gemini` | [github.com/google-gemini/gemini-cli](https://github.com/google-gemini/gemini-cli) |
-| Codex CLI | `codex` | [github.com/openai/codex](https://github.com/openai/codex) |
-| Cursor Agent | `cursor-agent` | [cursor.com/cli](https://cursor.com/docs/cli/overview) |
-| Copilot CLI | `copilot` | [github.com/github/copilot-cli](https://github.com/github/copilot-cli) |
-| Cline CLI | `cline` | [github.com/cline/cline](https://github.com/cline/cline) |
-| OpenCode | `opencode` | [opencode.ai/docs](https://opencode.ai/docs) |
-| Kimi CLI | `kimi` | [kimi-cli.com](https://www.kimi-cli.com/en/) |
-
-Each assistant has its own state detection strategy to properly track:
-- **Idle**: Ready for new input
-- **Busy**: Processing a request
-- **Waiting**: Awaiting user confirmation
-
-See [Gemini Support Documentation](docs/gemini-support.md) for CCManager-specific configuration.
-
-
-## Command Configuration
-
-![Screenshot From 2025-06-18 16-43-27](https://github.com/user-attachments/assets/47d62483-ce81-4340-8687-8afcae93d5db)
-
-
-CCManager supports configuring the command and arguments used to run Claude Code sessions, with automatic fallback options for reliability.
-
-### Features
-
-- Configure the main command (default: `claude`)
-- Set primary arguments (e.g., `--resume`)
-- Define fallback arguments if the primary configuration fails
-- Automatic retry with no arguments as final fallback
-
-### Quick Start
-
-1. Navigate to **Global Configuration** → **Configure Command Presets**
-2. Set your desired arguments (e.g., `--resume` for resuming sessions)
-3. Optionally set fallback arguments
-4. Save changes
-
-For detailed configuration options and examples, see [docs/command-config.md](docs/command-config.md).
-
-## Claude Code Teammate Mode
-
-When running the `claude` command with the default (`claude`) detection strategy, CCManager automatically appends `--teammate-mode in-process` to the CLI arguments. This prevents conflicts between Claude Code's agent teams feature and ccmanager's PTY-based session management.
-
-- **Automatic**: No configuration needed. CCManager injects the flag for all `claude` command sessions.
-- **Override**: If you explicitly specify `--teammate-mode` in your preset args, your value takes priority.
-- **Non-claude commands**: Other AI assistants (Gemini, Codex, etc.) are not affected.
-
-Setting `"teammateMode": "in-process"` in Claude Code's `settings.json` alone is not sufficient when running inside a tmux-like environment, which is why CCManager controls this via the CLI argument.
-
-
-## Session Data Copying
-
-CCManager can copy Claude Code session data (conversation history, context, and project state) when creating new worktrees, allowing you to maintain context across different branches.
-
-### Features
-
-- **Seamless Context Transfer**: Continue conversations in new worktrees without losing context
-- **Configurable Default**: Set whether to copy session data by default
-- **Per-Creation Choice**: Decide on each worktree creation whether to copy data
-- **Safe Operation**: Copying is non-fatal - worktree creation succeeds even if copying fails
-
-### How It Works
-
-When creating a new worktree, CCManager:
-1. Asks whether to copy session data from the current worktree
-2. Copies all session files from `~/.claude/projects/[source-path]` to `~/.claude/projects/[target-path]`
-3. Preserves conversation history, project context, and Claude Code state
-4. Allows immediate continuation of conversations in the new worktree
-
-### Configuration
-
-1. Navigate to **Global Configuration** → **Configure Worktree**
-2. Toggle **Copy Session Data** to set the default behavior
-3. Save changes
-
-The default choice (copy or start fresh) will be pre-selected when creating new worktrees.
-
-### Use Cases
-
-- **Feature Development**: Copy session data when creating feature branches to maintain project context
-- **Experimentation**: Start fresh when testing unrelated changes
-- **Collaboration**: Share session state across team worktrees
-- **Context Preservation**: Maintain long conversations across multiple development branches
-
-
-## Status Change Hooks
-
-CCManager can execute custom commands when Claude Code session status changes. This enables powerful automation workflows like desktop notifications, logging, or integration with other tools.
-
-### Overview
-
-Status hooks allow you to:
-- Get notified when Claude needs your input
-- Track time spent in different states
-- Trigger automations based on session activity
-- Integrate with notification systems like [noti](https://github.com/variadico/noti)
-
-For detailed setup instructions, see [docs/state-hooks.md](docs/status-hooks.md).
-
-## Worktree Hooks
-
-Worktree hooks execute custom commands when worktrees are created, enabling automation of development environment setup.
-
-### Features
-- **Post-creation hook**: Run commands after a worktree is created
-- **Environment variables**: Access worktree path, branch name, and git root
-- **Non-blocking execution**: Hooks run asynchronously without delaying operations
-- **Error resilience**: Hook failures don't prevent worktree creation
-
-### Use Cases
-- Set up development dependencies (`npm install`, `bundle install`)
-- Configure IDE settings per branch
-- Send notifications when worktrees are created
-- Initialize branch-specific configurations
-
-For configuration and examples, see [docs/worktree-hooks.md](docs/worktree-hooks.md).
-
-## Automatic Worktree Directory Generation
-
-CCManager can automatically generate worktree directory paths based on branch names, streamlining the worktree creation process.
-
-- **Auto-generate paths**: No need to manually specify directories
-- **Customizable patterns**: Use placeholders like `{branch}` in your pattern
-- **Smart sanitization**: Branch names are automatically made filesystem-safe
-
-For detailed configuration and examples, see [docs/worktree-auto-directory.md](docs/worktree-auto-directory.md).
-
-## Auto Approval (Experimental)
-
-CCManager can automatically approve Claude Code prompts that don't require user permission, reducing manual intervention while maintaining safety for sensitive operations.
-
-### Features
-
-- **Automatic decision**: Uses Claude (Haiku) to analyze prompts and determine if they need manual approval
-- **Custom commands**: Replace the default verifier with your own script or different AI model
-- **Safe fallback**: Always defaults to manual approval on errors or timeouts
-- **Interruptible**: Press any key to cancel auto-approval and review manually
-
-### Quick Start
-
-1. Navigate to **Global Configuration** → **Other & Experimental**
-2. Enable **Auto Approval (experimental)**
-3. (Optional) Configure a custom command for verification
-
-For detailed configuration and usage, see [docs/auto-approval.md](docs/auto-approval.md).
-
-## Devcontainer Integration
-
-CCManager supports running AI assistant sessions inside devcontainers while keeping the manager itself on the host machine. This enables sandboxed development environments with restricted network access while maintaining host-level notifications and automation.
-
-### Features
-
-- **Host-based management**: CCManager runs on your host machine, managing sessions inside containers
-- **Seamless integration**: All existing features (presets, status hooks, etc.) work with devcontainers
-- **Security-focused**: Compatible with Anthropic's recommended devcontainer configurations
-- **Persistent state**: Configuration and history persist across container recreations
-
-### Usage
+### Multi-project mode
 
 ```bash
-# Start CCManager with devcontainer support
-npx ccmanager --devc-up-command "<your devcontainer up command>" \
-              --devc-exec-command "<your devcontainer exec command>"
-```
-
-The devcontainer integration requires both commands:
-- `--devc-up-command`: Any command to start the devcontainer
-- `--devc-exec-command`: Any command to execute inside the container
-
-### Benefits
-
-- **Safe experimentation**: Run commands like `claude --dangerously-skip-permissions` without risk
-
-For detailed setup and configuration, see [docs/devcontainer.md](docs/devcontainer.md).
-
-## Multi-Project Mode
-
-CCManager can manage multiple git repositories from a single interface, allowing you to organize and navigate between different projects and their worktrees efficiently.
-
-### Quick Start
-
-```bash
-# Set the root directory containing your git projects
 export CCMANAGER_MULTI_PROJECT_ROOT="/path/to/your/projects"
-
-# Run CCManager in multi-project mode
-npx ccmanager --multi-project
+ccmanager --multi-project
 ```
 
-### Features
+### Keyboard shortcuts (defaults)
 
-- **Automatic project discovery**: Recursively finds all git repositories
-- **Recent projects**: Frequently used projects appear at the top
-- **Vi-like search**: Press `/` to filter projects or worktrees
-- **Session persistence**: Sessions remain active when switching projects
-- **Visual indicators**: See session counts `[active/busy/waiting]` for each project
+- **Ctrl+E** — return to the menu from an active session
+- **Esc** — cancel / back in dialogs
+- **/** — filter the menu
+- **Shift+Enter** — newline inside a session (this fork)
 
-### Navigation
+Customize in **Global Configuration → Configure Shortcuts**.
 
-1. **Project List**: Select from all discovered git repositories
-2. **Worktree Menu**: Manage worktrees for the selected project
-3. **Session View**: Interact with your AI assistant
+## How the session model works
 
-Use `B` key to navigate back from worktrees to project list.
+Each session is a real PTY running the agent command inside the worktree's directory. CCManager keeps it alive across menu navigation — when you re-enter a session it writes the saved terminal snapshot back to your screen, so you see exactly what you left. Status detection reads the child's output through a headless xterm, so busy/waiting/idle reflect the actual UI of whichever agent you're using.
 
-For detailed configuration and usage, see [docs/multi-project.md](docs/multi-project.md).
+Status hooks fire whenever a session transitions between states, receiving env vars like `CCMANAGER_NEW_STATE`, `CCMANAGER_WORKTREE_BRANCH`, `CCMANAGER_WORKTREE_DIR`, and `CCMANAGER_PRESET_NAME` — enough to tailor a notification per project or per agent.
 
-## Git Worktree Configuration
+## Supported agents
 
-CCManager can display enhanced git status information for each worktree when Git's worktree configuration extension is enabled.
-
-```bash
-# Enable enhanced status tracking
-git config extensions.worktreeConfig true
-```
-
-With this enabled, you'll see:
-- **File changes**: `+10 -5` (additions/deletions)
-- **Commit tracking**: `↑3 ↓1` (ahead/behind parent branch)
-- **Parent branch context**: Shows which branch the worktree was created from
-
-For complete setup instructions and troubleshooting, see [docs/git-worktree-config.md](docs/git-worktree-config.md).
+| Agent | Command |
+|-------|---------|
+| Claude Code (default) | `claude` |
+| Gemini CLI | `gemini` |
+| Codex CLI | `codex` |
+| Cursor Agent | `cursor-agent` |
+| Copilot CLI | `copilot` |
+| Cline CLI | `cline` |
+| OpenCode | `opencode` |
+| Kimi CLI | `kimi` |
 
 ## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Run in development mode
-npm run dev
-
-# Build
+npm run dev        # watch mode
 npm run build
-
-# Run tests
 npm test
-
-# Run linter
 npm run lint
-
-# Run type checker
 npm run typecheck
 ```
+
+## License
+
+MIT.
+
+---
+
+Based on [kbwo/ccmanager](https://github.com/kbwo/ccmanager) (tracking v4.1.8). All upstream features are preserved; this package only layers the two additions listed above.

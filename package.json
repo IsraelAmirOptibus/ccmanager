@@ -1,7 +1,7 @@
 {
 	"name": "@israel-amir/ccmanager",
 	"version": "4.1.8",
-	"description": "TUI application for managing multiple Claude Code sessions across Git worktrees",
+	"description": "TUI for managing multiple Claude Code / AI-agent sessions across Git worktrees. Fork of kbwo/ccmanager with Shift+Enter multiline input and notification hook presets.",
 	"license": "MIT",
 	"author": "Kodai Kabasawa",
 	"repository": {
