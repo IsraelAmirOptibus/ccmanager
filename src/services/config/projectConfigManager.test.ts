@@ -18,13 +18,21 @@ vi.mock('child_process', () => ({
 }));
 
 describe('ProjectConfigManager - git repository root', () => {
+	let savedMultiProjectRoot: string | undefined;
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.resetModules();
+		// Isolate from user env — multi-project mode disables project config loading
+		savedMultiProjectRoot = process.env['CCMANAGER_MULTI_PROJECT_ROOT'];
+		delete process.env['CCMANAGER_MULTI_PROJECT_ROOT'];
 	});
 
 	afterEach(() => {
 		vi.resetAllMocks();
+		if (savedMultiProjectRoot !== undefined) {
+			process.env['CCMANAGER_MULTI_PROJECT_ROOT'] = savedMultiProjectRoot;
+		}
 	});
 
 	it('should read config from git repository root, not cwd', async () => {
