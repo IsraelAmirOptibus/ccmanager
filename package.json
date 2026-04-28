@@ -45,7 +45,7 @@
 		"@kodaikabasawa/ccmanager-darwin-x64": "4.1.8",
 		"@kodaikabasawa/ccmanager-linux-arm64": "4.1.8",
 		"@kodaikabasawa/ccmanager-linux-x64": "4.1.8",
-		"@kodaikabasawa/ccmanager-win32-x64": "4.1.8"
+		"@kodaikabasawa/ccmanager-win32-x64": "4.1.10"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.28.0",
